@@ -2,8 +2,7 @@
 
 (ns leiningen.midje
   (:use [leiningen.core.eval :only [eval-in-project]])
-  (:require [leiningen.core.main :as main]
-            [clojure.set :as set]))
+  (:require [clojure.set :as set]))
 
 (defn repl-style-filters [filters]
   (map #(if (= (first %) \-)
@@ -14,10 +13,9 @@
 (defn make-load-facts-form [namespace-strings filters]
   (let [true-namespaces (map (fn [nss] `(quote ~(symbol nss)))
                              namespace-strings)]
-    `(let [failures# (:failures (midje.repl/load-facts ~@true-namespaces
-                                                       ~@(repl-style-filters filters)))]
-       (when-not (zero? failures#) 
-         (main/exit 255)))))
+    `(System/exit (min 255
+                       (:failures (midje.repl/load-facts ~@true-namespaces
+                                                         ~@(repl-style-filters filters)))))))
 
 (defn make-autotest-form [dirs filters]
   ;; Note: filters with an empty arglist means "use the default".
@@ -73,12 +71,12 @@
 
 (defn parse-args [arglist]
   (let [arglist-segments (partition-by flag? arglist)]
-      
+
       {:true-args (flag-args arglist-segments)
        :autotest? (any? autotest-segment? arglist-segments)
        :config? (any? config-segment? arglist-segments)
        :filter? (any? filter-segment? arglist-segments)
-       
+
        :autotest-args (autotest-args arglist-segments)
        :config-args (config-args arglist-segments)
        :filter-args (filter-args arglist-segments)}))
@@ -115,8 +113,8 @@
 
 
   ** Autotest
-  
-  % lein midje :autotest 
+
+  % lein midje :autotest
   % lein midje :autotest test/midje/util src/midje/util
 
   Starts a repl, uses `midje.repl`, and runs `(autotest)`.  The result
